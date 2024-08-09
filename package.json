@@ -1,0 +1,15 @@
+{
+  "name": "reaction-roles",
+  "version": "1.0.0",
+  "description": "A reaction role discord bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.3",
+    "discord.js": "^14.11.0"
+  }
+}
