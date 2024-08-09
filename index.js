@@ -64,9 +64,10 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+let hasNotified = false; // Flag to track if the notification has been sent
+
 async function getTwitchAccessToken() {
     try {
-        console.log('Getting Twitch access token...');
         const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
             params: {
                 client_id: TWITCH_CLIENT_ID,
@@ -82,7 +83,6 @@ async function getTwitchAccessToken() {
 
 async function checkIfLive(accessToken) {
     try {
-        console.log('Checking Twitch stream status...');
         const response = await axios.get(`https://api.twitch.tv/helix/streams?user_login=${TWITCH_USERNAME}`, {
             headers: {
                 'Client-ID': TWITCH_CLIENT_ID,
@@ -98,25 +98,37 @@ async function checkIfLive(accessToken) {
 async function notifyDiscord() {
     const channel = client.channels.cache.get(DISCORD_CHANNEL_ID);
     if (channel) {
-        console.log(`${TWITCH_USERNAME} is live on Twitch!`);
         await channel.send(`@everyone ${TWITCH_USERNAME} is live on Twitch! Check it out at https://www.twitch.tv/${TWITCH_USERNAME}`);
+    }
+}
+
+async function setBotActivity() {
+    const accessToken = await getTwitchAccessToken();
+    if (accessToken) {
+        const isLive = await checkIfLive(accessToken);
+        if (isLive && !hasNotified) {
+            client.user.setActivity(`${TWITCH_USERNAME} is live on Twitch!`, { type: "STREAMING", url: `https://www.twitch.tv/${TWITCH_USERNAME}` });
+            await notifyDiscord();
+            hasNotified = true; // Set the flag to true after notifying
+        } else if (!isLive && hasNotified) {
+            client.user.setActivity(`Waiting for ${TWITCH_USERNAME} to go live...`, { type: "PLAYING" });
+            hasNotified = false; // Reset the flag once the stream is no longer live
+        }
+    } else {
+        client.user.setActivity(`Waiting for ${TWITCH_USERNAME} to go live...`, { type: "PLAYING" });
     }
 }
 
 client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}`);
 
-    const accessToken = await getTwitchAccessToken();
-    if (accessToken) {
-        setInterval(async () => {
-            const isLive = await checkIfLive(accessToken);
-            if (isLive) {
-                await notifyDiscord();
-            }
-        }, 60000); // Check every 60 seconds
-    } else {
-        console.error('Failed to retrieve Twitch access token.');
-    }
+    // Set the initial activity status
+    await setBotActivity();
+
+    // Update the activity status periodically
+    setInterval(async () => {
+        await setBotActivity();
+    }, 60000); // Check every 60 seconds
 });
 
 client.login(token);

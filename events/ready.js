@@ -54,10 +54,5 @@ module.exports = {
 
 		// Set the initial activity status
 		await setBotActivity();
-
-		// Update the activity status periodically
-		setInterval(async () => {
-			await setBotActivity();
-		}, 60000); // Check every 60 seconds
 	}
 }
