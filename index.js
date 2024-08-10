@@ -110,6 +110,8 @@ async function setBotActivity() {
             client.user.setActivity(`${TWITCH_USERNAME} is live on Twitch!`, { type: "STREAMING", url: `https://www.twitch.tv/${TWITCH_USERNAME}` });
             await notifyDiscord();
             hasNotified = true; // Set the flag to true after notifying
+        } else if (isLive) {
+            client.user.setActivity(`${TWITCH_USERNAME} is live on Twitch!`, { type: "STREAMING", url: `https://www.twitch.tv/${TWITCH_USERNAME}` });
         } else if (!isLive && hasNotified) {
             client.user.setActivity(`Waiting for ${TWITCH_USERNAME} to go live...`, { type: "PLAYING" });
             hasNotified = false; // Reset the flag once the stream is no longer live
